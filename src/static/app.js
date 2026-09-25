@@ -328,6 +328,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return details.schedule;
   }
 
+  function normalizeDifficulty(difficulty) {
+    return (difficulty || "").trim().toLowerCase();
+  }
+
   // Function to determine activity type (this would ideally come from backend)
   function getActivityType(activityName, description) {
     const name = activityName.toLowerCase();
@@ -470,18 +474,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      const activityDifficulty = details.difficulty || "";
-      if (
-        currentDifficulty === "all-levels" &&
-        activityDifficulty
-      ) {
+      const activityDifficulty = normalizeDifficulty(details.difficulty);
+      if (currentDifficulty === "all-levels" && activityDifficulty) {
         return;
       }
 
       if (
         currentDifficulty &&
         currentDifficulty !== "all-levels" &&
-        activityDifficulty !== currentDifficulty
+        activityDifficulty !== normalizeDifficulty(currentDifficulty)
       ) {
         return;
       }

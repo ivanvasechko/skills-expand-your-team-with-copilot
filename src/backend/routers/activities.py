@@ -2,11 +2,12 @@
 Endpoints for the High School Management System API
 """
 
+import re
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from typing import Dict, Any, Optional, List
 
-from ..database import activities_collection, teachers_collection
+from ..database import activities_collection, teachers_collection, normalize_difficulty
 
 router = APIRouter(
     prefix="/activities",
@@ -44,7 +45,11 @@ def get_activities(
         query["schedule_details.end_time"] = {"$lte": end_time}
 
     if difficulty:
-        query["difficulty"] = difficulty
+        normalized_difficulty = normalize_difficulty(difficulty) or difficulty.strip()
+        query["difficulty"] = {
+            "$regex": f"^\\s*{re.escape(normalized_difficulty)}\\s*$",
+            "$options": "i"
+        }
     elif all_levels:
         query["$or"] = [
             {"difficulty": {"$exists": False}},

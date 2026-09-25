@@ -11,11 +11,24 @@ db = client['mergington_high']
 activities_collection = db['activities']
 teachers_collection = db['teachers']
 
+DIFFICULTY_LEVELS = {
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced"
+}
+
 # Methods
 def hash_password(password):
     """Hash password using Argon2"""
     ph = PasswordHasher()
     return ph.hash(password)
+
+def normalize_difficulty(difficulty):
+    """Normalize difficulty labels to the supported values"""
+    if not isinstance(difficulty, str):
+        return None
+
+    return DIFFICULTY_LEVELS.get(difficulty.strip().lower())
 
 def init_database():
     """Initialize database if empty"""
@@ -26,10 +39,16 @@ def init_database():
             activities_collection.insert_one({"_id": name, **details})
     else:
         for name, details in initial_activities.items():
-            if "difficulty" in details:
+            difficulty = normalize_difficulty(details.get("difficulty"))
+            if difficulty:
                 activities_collection.update_one(
-                    {"_id": name, "difficulty": {"$ne": details["difficulty"]}},
-                    {"$set": {"difficulty": details["difficulty"]}}
+                    {"_id": name},
+                    {"$set": {"difficulty": difficulty}}
+                )
+            else:
+                activities_collection.update_one(
+                    {"_id": name, "difficulty": {"$exists": True}},
+                    {"$unset": {"difficulty": ""}}
                 )
             
     # Initialize teacher accounts if empty
