@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const themeToggleText = document.getElementById("theme-toggle-text");
 
   const THEME_STORAGE_KEY = "preferredTheme";
+  const USER_STORAGE_KEY = "currentUser";
 
   // Activity categories with corresponding colors
   const activityTypes = {
@@ -56,6 +57,31 @@ document.addEventListener("DOMContentLoaded", () => {
     weekend: { days: ["Saturday", "Sunday"] }, // Weekend days
   };
 
+  function getStoredItem(key, warningMessage) {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.warn(warningMessage, error);
+      return null;
+    }
+  }
+
+  function setStoredItem(key, value, warningMessage) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      console.warn(warningMessage, error);
+    }
+  }
+
+  function removeStoredItem(key, warningMessage) {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn(warningMessage, error);
+    }
+  }
+
   function applyTheme(theme) {
     const isDarkMode = theme === "dark";
     document.body.classList.toggle("dark-mode", isDarkMode);
@@ -77,13 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function initializeTheme() {
-    let savedTheme = null;
-
-    try {
-      savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-    } catch (error) {
-      console.warn("Theme preference is unavailable.", error);
-    }
+    const savedTheme = getStoredItem(
+      THEME_STORAGE_KEY,
+      "Theme preference is unavailable."
+    );
 
     if (savedTheme === "dark" || savedTheme === "light") {
       applyTheme(savedTheme);
@@ -103,11 +126,11 @@ document.addEventListener("DOMContentLoaded", () => {
       : "dark";
     applyTheme(nextTheme);
 
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    } catch (error) {
-      console.warn("Unable to save theme preference.", error);
-    }
+    setStoredItem(
+      THEME_STORAGE_KEY,
+      nextTheme,
+      "Unable to save theme preference."
+    );
   }
 
   // Initialize filters from active elements
@@ -159,7 +182,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Check if user is already logged in (from localStorage)
   function checkAuthentication() {
-    const savedUser = localStorage.getItem("currentUser");
+    const savedUser = getStoredItem(
+      USER_STORAGE_KEY,
+      "Saved login is unavailable."
+    );
     if (savedUser) {
       try {
         currentUser = JSON.parse(savedUser);
@@ -192,7 +218,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // Session is valid, update user data
       const userData = await response.json();
       currentUser = userData;
-      localStorage.setItem("currentUser", JSON.stringify(userData));
+      setStoredItem(
+        USER_STORAGE_KEY,
+        JSON.stringify(userData),
+        "Unable to save login information."
+      );
       updateAuthUI();
     } catch (error) {
       console.error("Error validating session:", error);
@@ -249,7 +279,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Login successful
       currentUser = data;
-      localStorage.setItem("currentUser", JSON.stringify(data));
+      setStoredItem(
+        USER_STORAGE_KEY,
+        JSON.stringify(data),
+        "Unable to save login information."
+      );
       updateAuthUI();
       closeLoginModalHandler();
       showMessage(`Welcome, ${currentUser.display_name}!`, "success");
@@ -264,7 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Logout function
   function logout() {
     currentUser = null;
-    localStorage.removeItem("currentUser");
+    removeStoredItem(USER_STORAGE_KEY, "Unable to clear saved login.");
     updateAuthUI();
     showMessage("You have been logged out.", "info");
   }
