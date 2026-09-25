@@ -24,6 +24,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
+  const themeToggleButton = document.getElementById("theme-toggle");
+  const themeToggleIcon = document.getElementById("theme-toggle-icon");
+  const themeToggleText = document.getElementById("theme-toggle-text");
+
+  const THEME_STORAGE_KEY = "preferredTheme";
+  const USER_STORAGE_KEY = "currentUser";
 
   // Activity categories with corresponding colors
   const activityTypes = {
@@ -50,6 +56,82 @@ document.addEventListener("DOMContentLoaded", () => {
     afternoon: { start: "15:00", end: "18:00" }, // After school hours
     weekend: { days: ["Saturday", "Sunday"] }, // Weekend days
   };
+
+  function getStoredItem(key, warningMessage) {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.warn(warningMessage, error);
+      return null;
+    }
+  }
+
+  function setStoredItem(key, value, warningMessage) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      console.warn(warningMessage, error);
+    }
+  }
+
+  function removeStoredItem(key, warningMessage) {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn(warningMessage, error);
+    }
+  }
+
+  function applyTheme(theme) {
+    const isDarkMode = theme === "dark";
+    document.body.classList.toggle("dark-mode", isDarkMode);
+
+    if (!themeToggleButton || !themeToggleIcon || !themeToggleText) {
+      return;
+    }
+
+    themeToggleIcon.textContent = isDarkMode ? "☀️" : "🌙";
+    themeToggleText.textContent = isDarkMode ? "Light mode" : "Dark mode";
+    themeToggleButton.setAttribute(
+      "aria-label",
+      isDarkMode ? "Light mode" : "Dark mode"
+    );
+    themeToggleButton.setAttribute("aria-pressed", String(isDarkMode));
+    themeToggleButton.title = isDarkMode
+      ? "Switch to light mode"
+      : "Switch to dark mode";
+  }
+
+  function initializeTheme() {
+    const savedTheme = getStoredItem(
+      THEME_STORAGE_KEY,
+      "Theme preference is unavailable."
+    );
+
+    if (savedTheme === "dark" || savedTheme === "light") {
+      applyTheme(savedTheme);
+      return;
+    }
+
+    const prefersDarkMode =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    applyTheme(prefersDarkMode ? "dark" : "light");
+  }
+
+  function toggleTheme() {
+    const nextTheme = document.body.classList.contains("dark-mode")
+      ? "light"
+      : "dark";
+    applyTheme(nextTheme);
+
+    setStoredItem(
+      THEME_STORAGE_KEY,
+      nextTheme,
+      "Unable to save theme preference."
+    );
+  }
 
   // Initialize filters from active elements
   function initializeFilters() {
@@ -100,7 +182,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Check if user is already logged in (from localStorage)
   function checkAuthentication() {
-    const savedUser = localStorage.getItem("currentUser");
+    const savedUser = getStoredItem(
+      USER_STORAGE_KEY,
+      "Saved login is unavailable."
+    );
     if (savedUser) {
       try {
         currentUser = JSON.parse(savedUser);
@@ -133,7 +218,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // Session is valid, update user data
       const userData = await response.json();
       currentUser = userData;
-      localStorage.setItem("currentUser", JSON.stringify(userData));
+      setStoredItem(
+        USER_STORAGE_KEY,
+        JSON.stringify(userData),
+        "Unable to save login information."
+      );
       updateAuthUI();
     } catch (error) {
       console.error("Error validating session:", error);
@@ -190,7 +279,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Login successful
       currentUser = data;
-      localStorage.setItem("currentUser", JSON.stringify(data));
+      setStoredItem(
+        USER_STORAGE_KEY,
+        JSON.stringify(data),
+        "Unable to save login information."
+      );
       updateAuthUI();
       closeLoginModalHandler();
       showMessage(`Welcome, ${currentUser.display_name}!`, "success");
@@ -205,7 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Logout function
   function logout() {
     currentUser = null;
-    localStorage.removeItem("currentUser");
+    removeStoredItem(USER_STORAGE_KEY, "Unable to clear saved login.");
     updateAuthUI();
     showMessage("You have been logged out.", "info");
   }
@@ -235,6 +328,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Event listeners for authentication
+  if (themeToggleButton) {
+    themeToggleButton.addEventListener("click", toggleTheme);
+  }
   loginButton.addEventListener("click", openLoginModal);
   logoutButton.addEventListener("click", logout);
   closeLoginModal.addEventListener("click", closeLoginModalHandler);
@@ -863,6 +959,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initialize app
+  initializeTheme();
   checkAuthentication();
   initializeFilters();
   fetchActivities();
