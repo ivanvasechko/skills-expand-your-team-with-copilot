@@ -274,6 +274,9 @@ test("storage read failures fall back without breaking initialization", async ()
   const { document, elements, windowObject } = await loadApp({ failGet: true });
 
   assert.equal(document.body.classList.contains("dark-mode"), false);
+  assert.equal(document.body.classList.contains("not-authenticated"), true);
+  assert.equal(elements["login-button"].classList.contains("hidden"), false);
+  assert.equal(elements["user-info"].classList.contains("hidden"), true);
   assert.equal(elements["theme-toggle-text"].textContent, "Dark mode");
   assert.ok(windowObject.activityFilters);
 });
