@@ -2,11 +2,12 @@
 Endpoints for the High School Management System API
 """
 
+import re
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from typing import Dict, Any, Optional, List
 
-from ..database import activities_collection, teachers_collection
+from ..database import activities_collection, teachers_collection, normalize_difficulty
 
 router = APIRouter(
     prefix="/activities",
@@ -18,7 +19,9 @@ router = APIRouter(
 def get_activities(
     day: Optional[str] = None,
     start_time: Optional[str] = None,
-    end_time: Optional[str] = None
+    end_time: Optional[str] = None,
+    difficulty: Optional[str] = None,
+    all_levels: bool = False
 ) -> Dict[str, Any]:
     """
     Get all activities with their details, with optional filtering by day and time
@@ -26,6 +29,8 @@ def get_activities(
     - day: Filter activities occurring on this day (e.g., 'Monday', 'Tuesday')
     - start_time: Filter activities starting at or after this time (24-hour format, e.g., '14:30')
     - end_time: Filter activities ending at or before this time (24-hour format, e.g., '17:00')
+    - difficulty: Filter activities for a specific difficulty level
+    - all_levels: When true, only return activities without specific difficulty information
     """
     # Build the query based on provided filters
     query = {}
@@ -38,6 +43,19 @@ def get_activities(
     
     if end_time:
         query["schedule_details.end_time"] = {"$lte": end_time}
+
+    if difficulty:
+        normalized_difficulty = normalize_difficulty(difficulty) or difficulty.strip()
+        query["difficulty"] = {
+            "$regex": f"^\\s*{re.escape(normalized_difficulty)}\\s*$",
+            "$options": "i"
+        }
+    elif all_levels:
+        query["$or"] = [
+            {"difficulty": {"$exists": False}},
+            {"difficulty": None},
+            {"difficulty": {"$regex": r"^\s*$"}}
+        ]
     
     # Query the database
     activities = {}
