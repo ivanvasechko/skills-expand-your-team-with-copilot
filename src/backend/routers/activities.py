@@ -49,7 +49,7 @@ def get_activities(
         query["$or"] = [
             {"difficulty": {"$exists": False}},
             {"difficulty": None},
-            {"difficulty": ""}
+            {"difficulty": {"$regex": r"^\s*$"}}
         ]
     
     # Query the database
