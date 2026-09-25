@@ -73,7 +73,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function initializeTheme() {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    let savedTheme = null;
+
+    try {
+      savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    } catch (error) {
+      console.warn("Theme preference is unavailable.", error);
+    }
+
     applyTheme(savedTheme === "dark" ? "dark" : "light");
   }
 
@@ -81,8 +88,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const nextTheme = document.body.classList.contains("dark-mode")
       ? "light"
       : "dark";
-    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
     applyTheme(nextTheme);
+
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    } catch (error) {
+      console.warn("Unable to save theme preference.", error);
+    }
   }
 
   // Initialize filters from active elements
