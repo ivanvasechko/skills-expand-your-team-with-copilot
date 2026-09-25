@@ -281,16 +281,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function getActivityShareId(activityName) {
-    return activityName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+  function buildActivityShareId(activityName, details) {
+    const scheduleIdentifier = details.schedule_details
+      ? [
+          details.schedule_details.days.join(","),
+          details.schedule_details.start_time,
+          details.schedule_details.end_time,
+        ].join("|")
+      : details.schedule;
+
+    const shareKey = `${activityName}|${details.description}|${scheduleIdentifier}`;
+    const shareKeyBytes = new TextEncoder().encode(shareKey);
+    let binaryValue = "";
+
+    shareKeyBytes.forEach((byte) => {
+      binaryValue += String.fromCharCode(byte);
+    });
+
+    return btoa(binaryValue)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
   }
 
-  function buildActivityShareUrl(activityName) {
+  function buildActivityShareUrl(activityId) {
     const shareUrl = new URL(window.location.pathname, window.location.origin);
-    shareUrl.searchParams.set("activity", getActivityShareId(activityName));
+    shareUrl.searchParams.set("activity", activityId);
     return shareUrl.toString();
   }
 
@@ -312,13 +328,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function copyActivityLink(activityName) {
-    await copyTextToClipboard(buildActivityShareUrl(activityName));
+  async function copyActivityLink(activityName, activityId) {
+    await copyTextToClipboard(buildActivityShareUrl(activityId));
     showMessage(`${activityName} link copied to your clipboard.`, "success");
   }
 
-  async function shareActivity(activityName, details) {
-    const shareUrl = buildActivityShareUrl(activityName);
+  async function shareActivity(activityName, details, activityId) {
+    const shareUrl = buildActivityShareUrl(activityId);
     const shareData = {
       title: `${activityName} at Mergington High School`,
       text: `Check out ${activityName} at Mergington High School. ${formatSchedule(
@@ -340,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    await copyActivityLink(activityName);
+    await copyActivityLink(activityName, activityId);
   }
 
   function highlightSharedActivity() {
@@ -357,7 +373,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     sharedCard.classList.add("shared-activity");
-    sharedCard.setAttribute("aria-current", "true");
     sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
     sharedCard.focus({ preventScroll: true });
     hasHighlightedSharedActivity = true;
@@ -554,18 +569,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Display filtered activities
     Object.entries(filteredActivities).forEach(([name, details]) => {
-      renderActivityCard(name, details);
+      renderActivityCard(name, details, buildActivityShareId(name, details));
     });
 
     highlightSharedActivity();
   }
 
   // Function to render a single activity card
-  function renderActivityCard(name, details) {
+  function renderActivityCard(name, details, activityId) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
     activityCard.dataset.activityName = name;
-    activityCard.dataset.activityId = getActivityShareId(name);
+    activityCard.dataset.activityId = activityId;
     activityCard.tabIndex = -1;
     activityCard.setAttribute("role", "article");
     activityCard.setAttribute("aria-label", name);
@@ -683,7 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     shareButton.addEventListener("click", async () => {
       try {
-        await shareActivity(name, details);
+        await shareActivity(name, details, activityId);
       } catch (error) {
         console.error("Error sharing activity:", error);
         showMessage("Couldn't share this activity right now.", "error");
@@ -692,7 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     copyLinkButton.addEventListener("click", async () => {
       try {
-        await copyActivityLink(name);
+        await copyActivityLink(name, activityId);
       } catch (error) {
         console.error("Error copying activity link:", error);
         showMessage("Couldn't copy the activity link right now.", "error");
