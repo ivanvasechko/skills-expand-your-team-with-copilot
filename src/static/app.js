@@ -321,6 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return "sports";
     } else if (
       name.includes("art") ||
+      name.includes("manga") ||
       name.includes("music") ||
       name.includes("theater") ||
       name.includes("drama") ||
