@@ -40,22 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
-  const sharedActivityName = (() => {
-    const activityName = new URLSearchParams(window.location.search).get(
-      "activity"
-    );
-
-    if (!activityName) {
-      return "";
-    }
-
-    try {
-      return decodeURIComponent(activityName);
-    } catch (error) {
-      console.error("Error decoding shared activity name:", error);
-      return activityName;
-    }
-  })();
+  const sharedActivityName =
+    new URLSearchParams(window.location.search).get("activity") || "";
   let hasHighlightedSharedActivity = false;
 
   // Authentication state
@@ -296,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function buildActivityShareUrl(activityName) {
-    const shareUrl = new URL(window.location.href);
+    const shareUrl = new URL(window.location.pathname, window.location.origin);
     shareUrl.searchParams.set("activity", activityName);
     return shareUrl.toString();
   }
@@ -311,8 +297,12 @@ document.addEventListener("DOMContentLoaded", () => {
     temporaryInput.value = text;
     document.body.appendChild(temporaryInput);
     temporaryInput.select();
-    document.execCommand("copy");
+    const copied = document.execCommand("copy");
     document.body.removeChild(temporaryInput);
+
+    if (!copied) {
+      throw new Error("Clipboard copy command was not successful.");
+    }
   }
 
   async function copyActivityLink(activityName) {
@@ -360,7 +350,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     sharedCard.classList.add("shared-activity");
+    sharedCard.setAttribute(
+      "aria-label",
+      `${sharedCard.dataset.activityName}, shared activity`
+    );
     sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    sharedCard.focus({ preventScroll: true });
     hasHighlightedSharedActivity = true;
   }
 
@@ -566,6 +561,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
     activityCard.dataset.activityName = name;
+    activityCard.tabIndex = -1;
+    activityCard.setAttribute("role", "article");
+    activityCard.setAttribute("aria-label", name);
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;

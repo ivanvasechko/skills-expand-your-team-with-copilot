@@ -169,6 +169,11 @@ section h3 {
   border-color: var(--border-focus);
 }
 
+.activity-card:focus {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
 .activity-card h4 {
   margin-bottom: 8px;
   color: var(--primary);
