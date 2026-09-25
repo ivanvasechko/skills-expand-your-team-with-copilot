@@ -40,9 +40,22 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
-  const sharedActivityName = new URLSearchParams(window.location.search).get(
-    "activity"
-  );
+  const sharedActivityName = (() => {
+    const activityName = new URLSearchParams(window.location.search).get(
+      "activity"
+    );
+
+    if (!activityName) {
+      return "";
+    }
+
+    try {
+      return decodeURIComponent(activityName);
+    } catch (error) {
+      console.error("Error decoding shared activity name:", error);
+      return activityName;
+    }
+  })();
   let hasHighlightedSharedActivity = false;
 
   // Authentication state

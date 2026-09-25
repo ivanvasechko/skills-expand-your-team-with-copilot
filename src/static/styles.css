@@ -641,6 +641,10 @@ footer {
   .sidebar-filters {
     width: 100%;
   }
+
+  .share-actions {
+    flex-direction: column;
+  }
 }
 
 /* User controls in header */
