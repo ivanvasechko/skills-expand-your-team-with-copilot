@@ -32,6 +32,23 @@
   --info-light: #d1ecf1;
 }
 
+body.dark-mode {
+  --primary: #3949ab;
+  --primary-light: #5c6bc0;
+  --primary-dark: #283593;
+  --background: #111827;
+  --surface: #1f2937;
+  --text-primary: #f3f4f6;
+  --text-secondary: #cbd5e1;
+  --border: #334155;
+  --border-light: #475569;
+  --border-focus: #64748b;
+  --success-light: #16331b;
+  --warning-light: #3a2b10;
+  --error-light: #3d1717;
+  --info-light: #12303a;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -48,6 +65,12 @@ body {
   padding: 12px;
   background-color: var(--background);
   font-size: 0.9rem;
+  color-scheme: light;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body.dark-mode {
+  color-scheme: dark;
 }
 
 header {
@@ -487,11 +510,18 @@ footer {
   flex: 1;
   min-width: 0; /* Add this to prevent input from overflowing */
   padding: 6px 10px;
+  background-color: var(--surface);
+  color: var(--text-primary);
   border: 1px solid var(--border);
   border-right: none;
   border-radius: 20px 0 0 20px;
   font-size: 0.85rem;
   transition: all 0.3s ease;
+}
+
+.search-box input::placeholder,
+.modal-content input::placeholder {
+  color: var(--text-secondary);
 }
 
 .search-box input:focus {
@@ -617,6 +647,9 @@ footer {
   position: absolute;
   top: 10px;
   right: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 #user-status {
