@@ -2,6 +2,7 @@
 MongoDB database configuration and setup for Mergington High School API
 """
 
+import re
 from pymongo import MongoClient
 from argon2 import PasswordHasher
 
@@ -41,8 +42,19 @@ def init_database():
         for name, details in initial_activities.items():
             difficulty = normalize_difficulty(details.get("difficulty"))
             if difficulty:
+                difficulty_pattern = re.compile(
+                    rf"^\s*{re.escape(difficulty)}\s*$",
+                    re.IGNORECASE
+                )
                 activities_collection.update_one(
-                    {"_id": name},
+                    {
+                        "_id": name,
+                        "$or": [
+                            {"difficulty": {"$exists": False}},
+                            {"difficulty": None},
+                            {"difficulty": {"$not": difficulty_pattern}}
+                        ]
+                    },
                     {"$set": {"difficulty": difficulty}}
                 )
             else:
