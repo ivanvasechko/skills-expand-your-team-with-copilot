@@ -692,11 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   difficultyFilters.forEach((button) => {
     button.addEventListener("click", () => {
-      difficultyFilters.forEach((btn) => btn.classList.remove("active"));
-      button.classList.add("active");
-
-      currentDifficulty = button.dataset.difficulty;
-      fetchActivities();
+      setDifficultyFilter(button.dataset.difficulty);
     });
   });
 

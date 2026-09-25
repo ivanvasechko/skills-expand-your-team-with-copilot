@@ -46,7 +46,11 @@ def get_activities(
     if difficulty:
         query["difficulty"] = difficulty
     elif all_levels:
-        query["difficulty"] = {"$exists": False}
+        query["$or"] = [
+            {"difficulty": {"$exists": False}},
+            {"difficulty": None},
+            {"difficulty": ""}
+        ]
     
     # Query the database
     activities = {}
