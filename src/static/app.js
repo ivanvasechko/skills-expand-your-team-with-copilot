@@ -359,25 +359,6 @@ document.addEventListener("DOMContentLoaded", () => {
     await copyActivityLink(activityName, activityId);
   }
 
-  function highlightSharedActivity() {
-    if (!sharedActivityId || hasHighlightedSharedActivity) {
-      return;
-    }
-
-    const sharedCard = Array.from(
-      activitiesList.querySelectorAll(".activity-card")
-    ).find((card) => card.dataset.activityId === sharedActivityId);
-
-    if (!sharedCard) {
-      return;
-    }
-
-    sharedCard.classList.add("shared-activity");
-    sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
-    sharedCard.focus({ preventScroll: true });
-    hasHighlightedSharedActivity = true;
-  }
-
   // Format schedule for display - handles both old and new format
   function formatSchedule(details) {
     // If schedule_details is available, use the structured data
@@ -514,6 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function displayFilteredActivities() {
     // Clear the activities list
     activitiesList.innerHTML = "";
+    hasHighlightedSharedActivity = false;
 
     // Apply client-side filtering - this handles category filter and search, plus weekend filter
     let filteredActivities = {};
@@ -571,8 +553,6 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(filteredActivities).forEach(([name, details]) => {
       renderActivityCard(name, details, buildActivityShareId(name, details));
     });
-
-    highlightSharedActivity();
   }
 
   // Function to render a single activity card
@@ -725,6 +705,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     activitiesList.appendChild(activityCard);
+
+    if (activityId === sharedActivityId && !hasHighlightedSharedActivity) {
+      activityCard.classList.add("shared-activity");
+      requestAnimationFrame(() => {
+        activityCard.scrollIntoView({ behavior: "smooth", block: "center" });
+        activityCard.focus({ preventScroll: true });
+      });
+      hasHighlightedSharedActivity = true;
+    }
   }
 
   // Event listeners for search and filter
