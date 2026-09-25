@@ -519,8 +519,7 @@ footer {
   transition: all 0.3s ease;
 }
 
-.search-box input::placeholder,
-.modal-content input::placeholder {
+input::placeholder {
   color: var(--text-secondary);
 }
 

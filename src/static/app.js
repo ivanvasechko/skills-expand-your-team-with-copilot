@@ -66,6 +66,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     themeToggleIcon.textContent = isDarkMode ? "☀️" : "🌙";
     themeToggleText.textContent = isDarkMode ? "Light mode" : "Dark mode";
+    themeToggleButton.setAttribute(
+      "aria-label",
+      isDarkMode ? "Light mode" : "Dark mode"
+    );
     themeToggleButton.setAttribute("aria-pressed", String(isDarkMode));
     themeToggleButton.title = isDarkMode
       ? "Switch to light mode"
@@ -81,7 +85,16 @@ document.addEventListener("DOMContentLoaded", () => {
       console.warn("Theme preference is unavailable.", error);
     }
 
-    applyTheme(savedTheme === "dark" ? "dark" : "light");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      applyTheme(savedTheme);
+      return;
+    }
+
+    const prefersDarkMode =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    applyTheme(prefersDarkMode ? "dark" : "light");
   }
 
   function toggleTheme() {
