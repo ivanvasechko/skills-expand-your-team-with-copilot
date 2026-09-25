@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
-  const sharedActivityName =
+  const sharedActivityId =
     new URLSearchParams(window.location.search).get("activity") || "";
   let hasHighlightedSharedActivity = false;
 
@@ -281,9 +281,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function getActivityShareId(activityName) {
+    return activityName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
   function buildActivityShareUrl(activityName) {
     const shareUrl = new URL(window.location.pathname, window.location.origin);
-    shareUrl.searchParams.set("activity", activityName);
+    shareUrl.searchParams.set("activity", getActivityShareId(activityName));
     return shareUrl.toString();
   }
 
@@ -337,23 +344,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function highlightSharedActivity() {
-    if (!sharedActivityName || hasHighlightedSharedActivity) {
+    if (!sharedActivityId || hasHighlightedSharedActivity) {
       return;
     }
 
     const sharedCard = Array.from(
       activitiesList.querySelectorAll(".activity-card")
-    ).find((card) => card.dataset.activityName === sharedActivityName);
+    ).find((card) => card.dataset.activityId === sharedActivityId);
 
     if (!sharedCard) {
       return;
     }
 
     sharedCard.classList.add("shared-activity");
-    sharedCard.setAttribute(
-      "aria-label",
-      `${sharedCard.dataset.activityName}, shared activity`
-    );
+    sharedCard.setAttribute("aria-current", "true");
     sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
     sharedCard.focus({ preventScroll: true });
     hasHighlightedSharedActivity = true;
@@ -561,6 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
     activityCard.dataset.activityName = name;
+    activityCard.dataset.activityId = getActivityShareId(name);
     activityCard.tabIndex = -1;
     activityCard.setAttribute("role", "article");
     activityCard.setAttribute("aria-label", name);
